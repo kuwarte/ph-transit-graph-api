@@ -1,0 +1,677 @@
+================================================================================
+  PH-TRANSIT-GRAPH — COMPLETE PROJECT GUIDE
+  A Community-Driven Commuter Route & Fare Tracker API
+================================================================================
+
+  Built with: Spring Boot 3.5 · PostgreSQL · Java 21 · Maven
+  Author:     kuwarte
+  Repo:       github.com/kuwarte/ph-transit-graph
+
+================================================================================
+  TABLE OF CONTENTS
+================================================================================
+
+  1. Project Overview
+  2. Goals & Impact
+  3. System Roles
+  4. Project Folder Structure
+  5. Database Entities & Relationships
+  6. Full API Endpoints List
+  7. Learning Roadmap (Phase by Phase)
+  8. Spring Boot Concepts You Will Learn
+  9. PostgreSQL Concepts You Will Learn
+  10. Tools & Libraries
+  11. Definition of Done (Portfolio Checklist)
+
+================================================================================
+  1. PROJECT OVERVIEW
+================================================================================
+
+  ph-transit-graph is a REST API that digitizes commuter route and fare
+  information in the Philippines. Routes, stops, and fares are currently
+  scattered, outdated, or unavailable digitally — especially for jeepneys
+  and provincial buses.
+
+  This API solves that by:
+  - Letting transport operators publish and manage their own routes and fares
+  - Letting commuters search routes, find stops, and check fare prices
+  - Letting the community flag outdated or incorrect information
+  - Letting admins review and approve community corrections
+
+  Think of it like OpenStreetMap but specifically for PH transit fare data,
+  backed by a proper REST API with authentication and roles.
+
+================================================================================
+  2. GOALS & IMPACT
+================================================================================
+
+  REAL-WORLD PROBLEM:
+  - No single digital source for jeepney/bus routes and current fares
+  - LTFRB fare increases are not reflected anywhere commuters can easily check
+  - Commuters, especially students and minimum-wage workers, overpay or get
+    shortchanged because they don't know the correct fare
+
+  WHO BENEFITS:
+  - Daily commuters who want to know the correct fare before boarding
+  - Students navigating unfamiliar routes
+  - Transport operators who want a digital presence
+  - Developers who can consume this API to build commuter apps
+
+  WHY IT'S PORTFOLIO-WORTHY:
+  - Real domain complexity (not a todo app)
+  - Multi-role authentication
+  - Geospatial data (stop coordinates)
+  - Community-driven data governance
+  - Covers the full backend stack employers look for
+
+================================================================================
+  3. SYSTEM ROLES
+================================================================================
+
+  GUEST (no auth)
+  - Can search routes, stops, and fares
+  - Can view operator profiles
+  - Cannot modify anything
+
+  COMMUTER (registered user)
+  - Everything a guest can do
+  - Can save favorite routes
+  - Can flag incorrect fares or stops
+  - Can submit new route suggestions
+
+  OPERATOR (transport operator account)
+  - Can create and manage their own routes
+  - Can add/edit/delete stops on their routes
+  - Can set and update fare matrices
+  - Cannot touch other operators' data
+
+  ADMIN (platform administrator)
+  - Can approve or reject community-flagged corrections
+  - Can verify and activate operator accounts
+  - Can manage all data on the platform
+  - Can view platform analytics
+
+================================================================================
+  4. PROJECT FOLDER STRUCTURE
+================================================================================
+
+  src/main/java/com/phtransitgraph/
+  │
+  ├── PhTransitGraphApplication.java        ← Entry point
+  │
+  ├── config/
+  │   ├── SecurityConfig.java               ← Spring Security setup
+  │   ├── JwtConfig.java                    ← JWT settings
+  │   └── OpenApiConfig.java                ← Swagger/OpenAPI setup
+  │
+  ├── controller/
+  │   ├── AuthController.java
+  │   ├── RouteController.java
+  │   ├── StopController.java
+  │   ├── FareController.java
+  │   ├── OperatorController.java
+  │   ├── CommuterController.java
+  │   ├── ReportController.java
+  │   └── AdminController.java
+  │
+  ├── service/
+  │   ├── AuthService.java
+  │   ├── RouteService.java
+  │   ├── StopService.java
+  │   ├── FareService.java
+  │   ├── OperatorService.java
+  │   ├── CommuterService.java
+  │   ├── ReportService.java
+  │   └── AdminService.java
+  │
+  ├── repository/
+  │   ├── UserRepository.java
+  │   ├── RouteRepository.java
+  │   ├── StopRepository.java
+  │   ├── FareRepository.java
+  │   ├── OperatorRepository.java
+  │   ├── ReportRepository.java
+  │   └── SavedRouteRepository.java
+  │
+  ├── entity/
+  │   ├── User.java
+  │   ├── Operator.java
+  │   ├── Route.java
+  │   ├── RouteSegment.java
+  │   ├── Stop.java
+  │   ├── Fare.java
+  │   ├── SavedRoute.java
+  │   └── Report.java
+  │
+  ├── dto/
+  │   ├── request/
+  │   │   ├── LoginRequest.java
+  │   │   ├── RegisterRequest.java
+  │   │   ├── RouteRequest.java
+  │   │   ├── StopRequest.java
+  │   │   ├── FareRequest.java
+  │   │   └── ReportRequest.java
+  │   └── response/
+  │       ├── AuthResponse.java
+  │       ├── RouteResponse.java
+  │       ├── StopResponse.java
+  │       ├── FareResponse.java
+  │       └── ApiResponse.java
+  │
+  ├── exception/
+  │   ├── GlobalExceptionHandler.java
+  │   ├── ResourceNotFoundException.java
+  │   ├── UnauthorizedException.java
+  │   └── DuplicateResourceException.java
+  │
+  ├── security/
+  │   ├── JwtUtil.java
+  │   ├── JwtFilter.java
+  │   └── UserDetailsServiceImpl.java
+  │
+  └── enums/
+      ├── Role.java                         ← GUEST, COMMUTER, OPERATOR, ADMIN
+      ├── RouteStatus.java                  ← ACTIVE, INACTIVE, UNDER_REVIEW
+      ├── ReportStatus.java                 ← PENDING, APPROVED, REJECTED
+      └── VehicleType.java                  ← JEEPNEY, BUS, UV_EXPRESS, TRICYCLE
+
+  src/main/resources/
+  ├── application.properties
+  └── db/migration/                         ← Flyway SQL migration files
+      ├── V1__create_users.sql
+      ├── V2__create_operators.sql
+      ├── V3__create_routes.sql
+      ├── V4__create_stops.sql
+      ├── V5__create_fares.sql
+      ├── V6__create_reports.sql
+      ├── V7__create_saved_routes.sql
+      └── V8__seed_sample_data.sql
+
+================================================================================
+  5. DATABASE ENTITIES & RELATIONSHIPS
+================================================================================
+
+  USER
+  ─────────────────────────────────────────
+  id              UUID (primary key)
+  email           VARCHAR UNIQUE NOT NULL
+  password        VARCHAR NOT NULL (bcrypt hashed)
+  full_name       VARCHAR NOT NULL
+  role            ENUM (COMMUTER, OPERATOR, ADMIN)
+  is_active       BOOLEAN DEFAULT true
+  created_at      TIMESTAMP
+  updated_at      TIMESTAMP
+
+  OPERATOR
+  ─────────────────────────────────────────
+  id              UUID (primary key)
+  user_id         UUID (FK → User, one-to-one)
+  operator_name   VARCHAR NOT NULL
+  franchise_no    VARCHAR UNIQUE         ← LTFRB franchise number
+  contact_number  VARCHAR
+  is_verified     BOOLEAN DEFAULT false  ← Admin must verify
+  created_at      TIMESTAMP
+
+  ROUTE
+  ─────────────────────────────────────────
+  id              UUID (primary key)
+  operator_id     UUID (FK → Operator)
+  route_code      VARCHAR UNIQUE NOT NULL ← e.g. "GEN-TRIAS-CUBAO"
+  route_name      VARCHAR NOT NULL        ← e.g. "General Trias - Cubao"
+  origin          VARCHAR NOT NULL
+  destination     VARCHAR NOT NULL
+  vehicle_type    ENUM (JEEPNEY, BUS, UV_EXPRESS, TRICYCLE)
+  status          ENUM (ACTIVE, INACTIVE, UNDER_REVIEW)
+  created_at      TIMESTAMP
+  updated_at      TIMESTAMP
+
+  STOP
+  ─────────────────────────────────────────
+  id              UUID (primary key)
+  route_id        UUID (FK → Route)
+  stop_name       VARCHAR NOT NULL
+  sequence_order  INTEGER NOT NULL        ← order of stop along the route
+  latitude        DECIMAL(9,6)
+  longitude       DECIMAL(9,6)
+  landmark        VARCHAR                 ← e.g. "near Puregold"
+  created_at      TIMESTAMP
+
+  FARE
+  ─────────────────────────────────────────
+  id              UUID (primary key)
+  route_id        UUID (FK → Route)
+  from_stop_id    UUID (FK → Stop)
+  to_stop_id      UUID (FK → Stop)
+  base_fare       DECIMAL(8,2) NOT NULL
+  discounted_fare DECIMAL(8,2)            ← PWD/Senior/Student fare
+  effective_date  DATE NOT NULL
+  created_at      TIMESTAMP
+
+  SAVED_ROUTE (commuter bookmarks)
+  ─────────────────────────────────────────
+  id              UUID (primary key)
+  user_id         UUID (FK → User)
+  route_id        UUID (FK → Route)
+  saved_at        TIMESTAMP
+
+  REPORT (community flagging)
+  ─────────────────────────────────────────
+  id              UUID (primary key)
+  reporter_id     UUID (FK → User)
+  route_id        UUID (FK → Route, nullable)
+  stop_id         UUID (FK → Stop, nullable)
+  fare_id         UUID (FK → Fare, nullable)
+  report_type     VARCHAR                 ← WRONG_FARE, WRONG_STOP, etc.
+  description     TEXT NOT NULL
+  status          ENUM (PENDING, APPROVED, REJECTED)
+  reviewed_by     UUID (FK → User, nullable)
+  reviewed_at     TIMESTAMP
+  created_at      TIMESTAMP
+
+  RELATIONSHIPS DIAGRAM:
+  ─────────────────────────────────────────
+
+  User ──(1:1)──> Operator
+  Operator ──(1:N)──> Route
+  Route ──(1:N)──> Stop
+  Route ──(1:N)──> Fare
+  Stop ──(N:1)──< Fare (from_stop and to_stop)
+  User ──(N:M)──> Route (via SavedRoute)
+  User ──(1:N)──> Report
+
+================================================================================
+  6. FULL API ENDPOINTS LIST
+================================================================================
+
+  BASE URL: http://localhost:8080/api/v1
+
+  Legend:
+  [PUBLIC]   = No auth needed
+  [COMMUTER] = Requires COMMUTER or higher role JWT
+  [OPERATOR] = Requires OPERATOR role JWT
+  [ADMIN]    = Requires ADMIN role JWT
+
+  ── AUTH ─────────────────────────────────────────────────────────────────────
+
+  POST   /auth/register              [PUBLIC]    Register new commuter account
+  POST   /auth/login                 [PUBLIC]    Login, returns JWT token
+  POST   /auth/register/operator     [PUBLIC]    Register as operator (pending verify)
+  GET    /auth/me                    [COMMUTER]  Get current logged-in user info
+  POST   /auth/refresh               [COMMUTER]  Refresh JWT token
+
+  ── ROUTES ───────────────────────────────────────────────────────────────────
+
+  GET    /routes                     [PUBLIC]    Get all active routes (paginated)
+  GET    /routes/{id}                [PUBLIC]    Get a single route by ID
+  GET    /routes/search              [PUBLIC]    Search routes by origin/destination
+                                                 Query params: ?origin=&destination=
+  GET    /routes/code/{routeCode}    [PUBLIC]    Get route by route code
+  GET    /routes/vehicle/{type}      [PUBLIC]    Filter routes by vehicle type
+  POST   /routes                     [OPERATOR]  Create a new route
+  PUT    /routes/{id}                [OPERATOR]  Update own route
+  DELETE /routes/{id}                [OPERATOR]  Deactivate own route
+  GET    /routes/my-routes           [OPERATOR]  Get all routes owned by operator
+  PATCH  /routes/{id}/status         [ADMIN]     Change route status
+
+  ── STOPS ────────────────────────────────────────────────────────────────────
+
+  GET    /routes/{routeId}/stops           [PUBLIC]    Get all stops for a route
+  GET    /routes/{routeId}/stops/{stopId}  [PUBLIC]    Get a specific stop
+  POST   /routes/{routeId}/stops           [OPERATOR]  Add a stop to route
+  PUT    /routes/{routeId}/stops/{stopId}  [OPERATOR]  Update a stop
+  DELETE /routes/{routeId}/stops/{stopId}  [OPERATOR]  Remove a stop
+  PATCH  /routes/{routeId}/stops/reorder   [OPERATOR]  Reorder stops sequence
+
+  ── FARES ────────────────────────────────────────────────────────────────────
+
+  GET    /routes/{routeId}/fares              [PUBLIC]    Get full fare matrix for route
+  GET    /fares/calculate                     [PUBLIC]    Calculate fare between two stops
+                                                          Query params: ?from=&to=
+  POST   /routes/{routeId}/fares              [OPERATOR]  Add fare entry
+  PUT    /routes/{routeId}/fares/{fareId}     [OPERATOR]  Update fare entry
+  DELETE /routes/{routeId}/fares/{fareId}     [OPERATOR]  Delete fare entry
+
+  ── OPERATORS ────────────────────────────────────────────────────────────────
+
+  GET    /operators                  [PUBLIC]    Get all verified operators (paginated)
+  GET    /operators/{id}             [PUBLIC]    Get operator profile
+  GET    /operators/{id}/routes      [PUBLIC]    Get all routes by an operator
+  PUT    /operators/profile          [OPERATOR]  Update own operator profile
+  GET    /operators/pending          [ADMIN]     Get unverified operator accounts
+  PATCH  /operators/{id}/verify      [ADMIN]     Verify an operator account
+
+  ── COMMUTER FEATURES ────────────────────────────────────────────────────────
+
+  GET    /commuter/saved-routes            [COMMUTER]  Get saved/bookmarked routes
+  POST   /commuter/saved-routes/{routeId}  [COMMUTER]  Save a route
+  DELETE /commuter/saved-routes/{routeId}  [COMMUTER]  Remove saved route
+
+  ── REPORTS (Community Flagging) ─────────────────────────────────────────────
+
+  POST   /reports                    [COMMUTER]  Submit a flag/report
+  GET    /reports/my-reports         [COMMUTER]  View own submitted reports
+  GET    /reports                    [ADMIN]     Get all reports (filterable by status)
+  GET    /reports/{id}               [ADMIN]     Get a single report detail
+  PATCH  /reports/{id}/approve       [ADMIN]     Approve a report (triggers data fix)
+  PATCH  /reports/{id}/reject        [ADMIN]     Reject a report with reason
+
+  ── ADMIN ────────────────────────────────────────────────────────────────────
+
+  GET    /admin/users                [ADMIN]     List all users (paginated)
+  GET    /admin/users/{id}           [ADMIN]     Get user detail
+  PATCH  /admin/users/{id}/deactivate [ADMIN]   Deactivate a user account
+  GET    /admin/analytics            [ADMIN]     Platform stats
+                                                 (total routes, operators, reports)
+
+================================================================================
+  7. ROADMAP 
+================================================================================
+
+  PHASE 1
+  ─────────────────────────────────────────
+  Goal: Get the project running with your first working endpoint
+
+  Tasks:
+  □ Set up Spring Boot project with PostgreSQL connection
+  □ Understand application.properties configuration
+  □ Create your first Entity (User) with JPA annotations
+  □ Create Repository, Service, Controller layers
+  □ Build GET /routes (return hardcoded data first)
+  □ Connect to real DB and return data from PostgreSQL
+
+  Concepts learned: @Entity, @RestController, @Service, @Repository,
+  @GetMapping, @PostMapping, JPA basics, Spring layers
+
+  ─────────────────────────────────────────
+  PHASE 2
+  ─────────────────────────────────────────
+  Goal: Complete CRUD for Route, Stop, Fare with proper validation
+
+  Tasks:
+  □ Build all Route endpoints (GET, POST, PUT, DELETE)
+  □ Build all Stop endpoints (nested under routes)
+  □ Build all Fare endpoints
+  □ Add DTOs (never expose entities directly)
+  □ Add @Valid + Bean Validation (@NotBlank, @Min, etc.)
+  □ Add Global Exception Handler
+
+  Concepts learned: DTOs, request/response separation, Bean Validation,
+  @ControllerAdvice, @ExceptionHandler, ResponseEntity, HTTP status codes
+
+  ─────────────────────────────────────────
+  PHASE 3
+  ─────────────────────────────────────────
+  Goal: Protect endpoints with JWT and role-based access
+
+  Tasks:
+  □ Add Spring Security dependency and disable default login page
+  □ Implement user registration with BCrypt password hashing
+  □ Implement JWT token generation on login
+  □ Add JWT filter to validate token on every request
+  □ Implement role-based access (@PreAuthorize)
+  □ Test all role restrictions (guest vs commuter vs operator vs admin)
+
+  Concepts learned: Spring Security, BCryptPasswordEncoder, JWT,
+  OncePerRequestFilter, UserDetailsService, @PreAuthorize,
+  SecurityFilterChain, stateless sessions
+
+  ─────────────────────────────────────────
+  PHASE 4
+  ─────────────────────────────────────────
+  Goal: Implement search, filtering, and pagination
+
+  Tasks:
+  □ Add pagination to GET /routes (Pageable)
+  □ Add search by origin/destination (custom JPQL query)
+  □ Add filtering by vehicle type
+  □ Implement fare calculation endpoint (from stop → to stop)
+  □ Add sorting support
+
+  Concepts learned: Pageable, Page<T>, @Query (JPQL), Spring Data
+  query methods, dynamic filtering, Specifications
+
+  ─────────────────────────────────────────
+  PHASE 5
+  ─────────────────────────────────────────
+  Goal: Manage database schema professionally with Flyway
+
+  Tasks:
+  □ Add Flyway dependency
+  □ Convert your JPA auto-create tables to Flyway SQL scripts
+  □ Write seed data migration (real Cavite→Manila routes)
+  □ Practice schema evolution (add a column via new migration file)
+
+  Concepts learned: Flyway, versioned migrations, V1__name.sql convention,
+  why ddl-auto=validate in production, database versioning
+
+  ─────────────────────────────────────────
+  PHASE 6
+  ─────────────────────────────────────────
+  Goal: Build the report/flagging system and saved routes
+
+  Tasks:
+  □ Build Report entity and full workflow (submit → review → approve/reject)
+  □ Build SavedRoute feature for commuters
+  □ Implement admin review endpoints
+  □ Add report status state machine (PENDING → APPROVED/REJECTED)
+
+  Concepts learned: State machines in services, complex business logic,
+  multi-table queries, ownership checks (can only edit own data)
+
+  ─────────────────────────────────────────
+  PHASE 7
+  ─────────────────────────────────────────
+  Goal: Make it presentable and deployable
+
+  Tasks:
+  □ Add Springdoc OpenAPI (auto-generate Swagger UI docs)
+  □ Add audit fields (created_at, updated_at) with @CreatedDate
+  □ Add soft deletes (is_deleted flag instead of hard delete)
+  □ Write unit tests for service layer (JUnit 5 + Mockito)
+  □ Write integration tests for controllers
+  □ Add Docker + Docker Compose setup
+  □ Deploy to Railway or Render (free tier)
+  □ Add README with setup instructions and live API URL
+
+  Concepts learned: OpenAPI/Swagger, JPA Auditing, soft deletes,
+  unit testing, Mockito, integration testing, Docker, deployment
+
+================================================================================
+  8. SPRING BOOT CONCEPTS
+================================================================================
+
+  CORE SPRING
+  ─────────────────────────────────────────
+  □ Dependency Injection (@Autowired, constructor injection)
+  □ Spring Beans and the Application Context
+  □ @Component, @Service, @Repository, @Controller, @RestController
+  □ @Configuration and @Bean
+  □ application.properties configuration
+  □ Profiles (@Profile, application-dev.properties)
+
+  REST API
+  ─────────────────────────────────────────
+  □ @GetMapping, @PostMapping, @PutMapping, @DeleteMapping, @PatchMapping
+  □ @RequestBody, @PathVariable, @RequestParam
+  □ ResponseEntity and HTTP status codes
+  □ RESTful URL design conventions
+  □ API versioning (/api/v1/)
+
+  DATA & JPA
+  ─────────────────────────────────────────
+  □ @Entity, @Table, @Id, @GeneratedValue
+  □ @Column, @NotNull, @UniqueConstraint
+  □ @OneToMany, @ManyToOne, @OneToOne, @ManyToMany
+  □ FetchType.LAZY vs FetchType.EAGER
+  □ JpaRepository and its built-in methods
+  □ Custom @Query with JPQL
+  □ Pagination with Pageable and Page<T>
+  □ @Transactional
+  □ JPA Auditing (@CreatedDate, @LastModifiedDate)
+
+  VALIDATION
+  ─────────────────────────────────────────
+  □ @Valid on controller method parameters
+  □ @NotBlank, @NotNull, @Min, @Max, @Email, @Size
+  □ Custom validators
+  □ Validation error messages
+
+  EXCEPTION HANDLING
+  ─────────────────────────────────────────
+  □ @ControllerAdvice and @ExceptionHandler
+  □ Custom exception classes
+  □ Consistent error response format
+  □ HTTP status code mapping
+
+  SECURITY
+  ─────────────────────────────────────────
+  □ Spring Security filter chain
+  □ BCryptPasswordEncoder
+  □ JWT (JSON Web Token) — creation and validation
+  □ OncePerRequestFilter (JWT filter)
+  □ UserDetails and UserDetailsService
+  □ SecurityContext and Authentication object
+  □ @PreAuthorize and method-level security
+  □ Role-based access control
+  □ Stateless session management
+
+  TESTING
+  ─────────────────────────────────────────
+  □ JUnit 5 (@Test, @BeforeEach, @AfterEach)
+  □ Mockito (@Mock, @InjectMocks, when().thenReturn())
+  □ @SpringBootTest for integration tests
+  □ MockMvc for controller testing
+  □ @DataJpaTest for repository testing
+
+  TOOLS & LIBRARIES
+  ─────────────────────────────────────────
+  □ Lombok (@Data, @Builder, @NoArgsConstructor, @AllArgsConstructor)
+  □ Flyway for database migrations
+  □ Springdoc OpenAPI for auto-generated API docs
+  □ ModelMapper or MapStruct for DTO mapping
+  □ Docker and Docker Compose
+
+================================================================================
+  9. POSTGRESQL CONCEPTS
+================================================================================
+
+  □ Creating databases, users, and granting privileges
+  □ UUID as primary key type
+  □ ENUM types in Postgres
+  □ Foreign keys and referential integrity
+  □ Indexes (on frequently queried columns like route_code, email)
+  □ DECIMAL precision for fare amounts
+  □ TIMESTAMP with timezone
+  □ Soft deletes (is_deleted, deleted_at columns)
+  □ Writing raw SQL migration scripts
+  □ Query optimization basics (EXPLAIN ANALYZE)
+  □ Full-text search with ILIKE for route search
+  □ Joining multiple tables in JPQL
+  □ Aggregate queries (COUNT, SUM for analytics endpoints)
+
+================================================================================
+  10. TOOLS & LIBRARIES
+================================================================================
+
+  DEVELOPMENT
+  ─────────────────────────────────────────
+  Spring Boot 3.5.0          → Framework
+  Java 21 (LTS)              → Language
+  Maven                      → Build tool
+  PostgreSQL                 → Database
+  Lombok                     → Reduce boilerplate code
+  jjwt (io.jsonwebtoken)     → JWT creation and parsing
+  Flyway                     → Database migrations
+  Springdoc OpenAPI          → Auto Swagger UI docs
+  ModelMapper                → Entity ↔ DTO mapping
+
+  TESTING
+  ─────────────────────────────────────────
+  JUnit 5                    → Unit testing framework
+  Mockito                    → Mocking dependencies
+  H2 Database                → In-memory DB for tests
+
+  DEVOPS & DEPLOYMENT
+  ─────────────────────────────────────────
+  Docker                     → Containerize the app
+  Docker Compose             → Run app + Postgres together
+  Railway / Render           → Free cloud deployment
+  GitHub                     → Version control + portfolio
+
+  API TESTING
+  ─────────────────────────────────────────
+  Thunder Client (VS Code)   → Test endpoints in editor
+  Postman                    → Alternative API testing
+  Swagger UI                 → Auto-generated, interactive docs
+
+================================================================================
+  11. DEFINITION OF DONE 
+================================================================================
+
+  FUNCTIONALITY
+  □ All endpoints implemented and working
+  □ JWT auth working for all protected routes
+  □ Role-based access enforced (guest/commuter/operator/admin)
+  □ Pagination working on list endpoints
+  □ Search and filtering working
+  □ Fare calculation working
+  □ Report/flagging workflow working end to end
+  □ Seed data loaded (real Cavite→Manila routes)
+
+  CODE QUALITY
+  □ DTOs used — no raw entities returned from controllers
+  □ Global exception handler returns consistent error format
+  □ Validation on all POST/PUT request bodies
+  □ Service layer handles all business logic (not in controllers)
+  □ No hardcoded values (use application.properties)
+  □ Meaningful commit messages on GitHub
+
+  TESTS
+  □ Unit tests for service layer (at least RouteService, FareService)
+  □ At least one integration test per controller
+  □ All tests passing with mvn test
+
+  DOCUMENTATION
+  □ Swagger UI accessible at /swagger-ui.html
+  □ All endpoints documented with descriptions
+  □ README.md with project overview, how to run, and live URL
+
+  DEPLOYMENT
+  □ Dockerfile written
+  □ docker-compose.yml written (app + postgres)
+  □ App deployed and live on Railway or Render
+  □ Live Swagger UI URL in GitHub README
+
+================================================================================
+  QUICK REFERENCE — HTTP STATUS CODES TO USE
+================================================================================
+
+  200 OK              → Successful GET, PUT, PATCH
+  201 CREATED         → Successful POST (resource created)
+  204 NO CONTENT      → Successful DELETE
+  400 BAD REQUEST     → Validation failed, malformed input
+  401 UNAUTHORIZED    → No token or invalid token
+  403 FORBIDDEN       → Valid token but wrong role
+  404 NOT FOUND       → Resource doesn't exist
+  409 CONFLICT        → Duplicate resource (email, route code)
+  500 INTERNAL ERROR  → Unexpected server error
+
+================================================================================
+  QUICK REFERENCE — REST URL CONVENTIONS
+================================================================================
+
+  Use nouns, not verbs in URLs:
+  ✅ GET    /routes              → list all routes
+  ✅ GET    /routes/{id}         → get one route
+  ✅ POST   /routes              → create a route
+  ✅ PUT    /routes/{id}         → full update a route
+  ✅ PATCH  /routes/{id}/status  → partial update
+  ✅ DELETE /routes/{id}         → delete a route
+
+  ❌ GET    /getRoutes           → wrong (verb in URL)
+  ❌ POST   /createRoute         → wrong (verb in URL)
+  ❌ GET    /routes/getById/1    → wrong (redundant)
+
+================================================================================
+  END OF GUIDE
+================================================================================
