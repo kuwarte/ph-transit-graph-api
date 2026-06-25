@@ -15,6 +15,6 @@ public interface RouteRepository extends JpaRepository<Route, String> {
 
     List<Route> findByVehicleType(VehicleType vehicleType);
 
-    List<Route> findByOriginAndDestinationContainingIgnoreCase(String origin, String destination);
+    List<Route> findByOriginContainingIgnoreCaseAndDestinationContainingIgnoreCase(String origin, String destination);
 
 }
