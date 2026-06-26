@@ -74,19 +74,19 @@ public class Route {
         this.routeName = routeName;
     }
 
-    public String getOrigin() {
+    public Place getOrigin() {
         return origin;
     }
 
-    public void setOrigin(String origin) {
+    public void setOrigin(Place origin) {
         this.origin = origin;
     }
 
-    public String getDestination() {
+    public Place getDestination() {
         return destination;
     }
 
-    public void setDestination(String destination) {
+    public void setDestination(Place destination) {
         this.destination = destination;
     }
 

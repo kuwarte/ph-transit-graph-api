@@ -24,8 +24,10 @@ public class RouteService {
                 route.getId(),
                 route.getRouteCode(),
                 route.getRouteName(),
-                route.getOrigin(),
-                route.getDestination(),
+                route.getOrigin().getName(),
+                route.getOrigin().getMunicipality(),
+                route.getDestination().getName(),
+                route.getDestination().getMunicipality(),
                 route.getVehicleType().name(),
                 route.getStatus().name());
     }

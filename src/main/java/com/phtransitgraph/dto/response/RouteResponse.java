@@ -1,21 +1,28 @@
 package com.phtransitgraph.dto.response;
 
 public class RouteResponse {
+
     private String id;
     private String routeCode;
     private String routeName;
-    private String origin;
-    private String destination;
+    private String originName;
+    private String originMunicipality;
+    private String destinationName;
+    private String destinationMunicipality;
     private String vehicleType;
     private String status;
 
-    public RouteResponse(String id, String routeCode, String routeName, String origin, String destination,
+    public RouteResponse(String id, String routeCode, String routeName,
+            String originName, String originMunicipality,
+            String destinationName, String destinationMunicipality,
             String vehicleType, String status) {
         this.id = id;
         this.routeCode = routeCode;
         this.routeName = routeName;
-        this.origin = origin;
-        this.destination = destination;
+        this.originName = originName;
+        this.originMunicipality = originMunicipality;
+        this.destinationName = destinationName;
+        this.destinationMunicipality = destinationMunicipality;
         this.vehicleType = vehicleType;
         this.status = status;
     }
@@ -32,12 +39,20 @@ public class RouteResponse {
         return routeName;
     }
 
-    public String getOrigin() {
-        return origin;
+    public String getOriginName() {
+        return originName;
     }
 
-    public String getDestination() {
-        return destination;
+    public String getOriginMunicipality() {
+        return originMunicipality;
+    }
+
+    public String getDestinationName() {
+        return destinationName;
+    }
+
+    public String getDestinationMunicipality() {
+        return destinationMunicipality;
     }
 
     public String getVehicleType() {
@@ -47,5 +62,4 @@ public class RouteResponse {
     public String getStatus() {
         return status;
     }
-
 }
