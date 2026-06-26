@@ -49,7 +49,7 @@ public class RouteService {
         String d = destination == null ? "" : destination;
 
         return routeRepository
-                .findByOriginContainingIgnoreCaseAndDestinationContainingIgnoreCase(o, d)
+                .searchByOriginAndDestination(o, d)
                 .stream()
                 .map(this::toResponse)
                 .toList();

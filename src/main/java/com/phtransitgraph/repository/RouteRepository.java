@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.phtransitgraph.entity.Route;
@@ -15,6 +17,10 @@ public interface RouteRepository extends JpaRepository<Route, String> {
 
     List<Route> findByVehicleType(VehicleType vehicleType);
 
-    List<Route> findByOriginContainingIgnoreCaseAndDestinationContainingIgnoreCase(String origin, String destination);
-
+    @Query("SELECT r FROM Route r WHERE " +
+            "LOWER(r.origin.name) LIKE LOWER(CONCAT('%', :origin, '%')) AND " +
+            "LOWER(r.destination.name) LIKE LOWER(CONCAT('%', :destination, '%'))")
+    List<Route> searchByOriginAndDestination(
+            @Param("origin") String origin,
+            @Param("destination") String destination);
 }

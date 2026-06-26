@@ -21,10 +21,10 @@ public class Place {
     @Column(nullable = false)
     private String province;
 
-    @Column(precision = 9, scale = 6)
+    @Column
     private Double latitude;
 
-    @Column(precision = 9, scale = 6)
+    @Column
     private Double longitude;
 
     @Column(name = "created_at")
