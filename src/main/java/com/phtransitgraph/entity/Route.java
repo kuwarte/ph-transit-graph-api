@@ -6,7 +6,15 @@ import com.phtransitgraph.enums.RouteStatus;
 import com.phtransitgraph.enums.VehicleType;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "routes")
 public class Route {
@@ -52,65 +60,5 @@ public class Route {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getRouteCode() {
-        return routeCode;
-    }
-
-    public void setRouteCode(String routeCode) {
-        this.routeCode = routeCode;
-    }
-
-    public String getRouteName() {
-        return routeName;
-    }
-
-    public void setRouteName(String routeName) {
-        this.routeName = routeName;
-    }
-
-    public Place getOrigin() {
-        return origin;
-    }
-
-    public void setOrigin(Place origin) {
-        this.origin = origin;
-    }
-
-    public Place getDestination() {
-        return destination;
-    }
-
-    public void setDestination(Place destination) {
-        this.destination = destination;
-    }
-
-    public VehicleType getVehicleType() {
-        return vehicleType;
-    }
-
-    public void setVehicleType(VehicleType vehicleType) {
-        this.vehicleType = vehicleType;
-    }
-
-    public RouteStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(RouteStatus status) {
-        this.status = status;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
     }
 }
