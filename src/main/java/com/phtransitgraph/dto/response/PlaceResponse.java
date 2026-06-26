@@ -12,7 +12,7 @@ public class PlaceResponse {
     private String name;
     private String municipality;
     private String province;
-    private String latitude;
-    private String longitude;
+    private Double latitude;
+    private Double longitude;
     private LocalDateTime createdAt;
 }
