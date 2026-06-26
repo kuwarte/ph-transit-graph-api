@@ -11,23 +11,23 @@ import jakarta.persistence.*;
 @Table(name = "routes")
 public class Route {
 
-    // PK UUID auto generated
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    // Column
     @Column(name = "route_code", unique = true, nullable = false)
     private String routeCode;
 
     @Column(name = "route_name", nullable = false)
     private String routeName;
 
-    @Column(nullable = false)
-    private String origin;
+    @ManyToOne
+    @JoinColumn(name = "origin_id", nullable = false)
+    private Place origin;
 
-    @Column(nullable = false)
-    private String destination;
+    @ManyToOne
+    @JoinColumn(name = "destination_id", nullable = false)
+    private Place destination;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "vehicle_type", nullable = false)
