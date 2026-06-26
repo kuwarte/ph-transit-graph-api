@@ -106,6 +106,7 @@
   │
   ├── controller/
   │   ├── AuthController.java
+  │   ├── PlaceController.java
   │   ├── RouteController.java
   │   ├── StopController.java
   │   ├── FareController.java
@@ -116,6 +117,7 @@
   │
   ├── service/
   │   ├── AuthService.java
+  │   ├── PlaceService.java
   │   ├── RouteService.java
   │   ├── StopService.java
   │   ├── FareService.java
@@ -126,6 +128,7 @@
   │
   ├── repository/
   │   ├── UserRepository.java
+  │   ├── PlaceRepository.java
   │   ├── RouteRepository.java
   │   ├── StopRepository.java
   │   ├── FareRepository.java
@@ -136,6 +139,7 @@
   ├── entity/
   │   ├── User.java
   │   ├── Operator.java
+  │   ├── Place.java
   │   ├── Route.java
   │   ├── RouteSegment.java
   │   ├── Stop.java
@@ -153,6 +157,7 @@
   │   │   └── ReportRequest.java
   │   └── response/
   │       ├── AuthResponse.java
+  │       ├── PlaceResponse.java
   │       ├── RouteResponse.java
   │       ├── StopResponse.java
   │       ├── FareResponse.java
