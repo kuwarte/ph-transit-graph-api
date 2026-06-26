@@ -296,7 +296,7 @@
   User ──(N:M)──> Route (via SavedRoute)
   User ──(1:N)──> Report
   Place ──(1:N)──> Route (as origin)
- Place ──(1:N)──> Route (as destination)
+  Place ──(1:N)──> Route (as destination)
 
 ================================================================================
   6. FULL API ENDPOINTS LIST
