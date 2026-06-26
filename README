@@ -1,0 +1,94 @@
+ph-transit-graph-api
+
+> Community-driven route and fare data API for Philippine transit.
+
+----------------------------------------------------------------------------
+STACK
+----------------------------------------------------------------------------
+
+Spring Boot 3.5
+Spring Data JPA + Hibernate
+PostgreSQL 16
+Maven
+Lombok
+Bean Validation
+
+----------------------------------------------------------------------------
+GETTING STARTED
+----------------------------------------------------------------------------
+
+Prerequisites
+- Java 21+
+- PostgreSQL
+- Maven
+
+Setup
+  git clone https://github.com/kuwarte/ph-transit-graph-api.git
+  cd ph-transit-graph-api
+  cp .env.example .env
+  mvn spring-boot:run
+
+Database
+  CREATE DATABASE ph_transit_graph;
+  CREATE USER transituser WITH PASSWORD 'yourpassword';
+  GRANT ALL PRIVILEGES ON DATABASE ph_transit_graph TO transituser;
+  GRANT ALL ON SCHEMA public TO transituser;
+
+----------------------------------------------------------------------------
+API ENDPOINTS
+----------------------------------------------------------------------------
+
+Base URL: http://localhost:8080/api/v1
+
+Places
+  GET    /places
+  GET    /places/{id}
+  GET    /places/search?municipality=&province=
+  POST   /places
+  PUT    /places/{id}
+  DELETE /places/{id}
+
+Routes
+  GET    /routes
+  GET    /routes/{id}
+  GET    /routes/search?origin=&destination=
+  GET    /routes/vehicle/{type}
+  GET    /routes/code/{routeCode}
+  POST   /routes
+  PUT    /routes/{id}
+  PATCH  /routes/{id}/status
+  DELETE /routes/{id}
+
+----------------------------------------------------------------------------
+TODO
+----------------------------------------------------------------------------
+
+@@@ 1
+  [x] Place
+  [x] Route
+  [ ] Stop
+  [ ] Fare
+
+@@@ 2
+  [ ] User
+  [ ] Operator
+
+@@@ 3
+  [ ] Report
+  [ ] SavedRoute
+
+@@@ 4
+  [ ] JWT auth
+  [ ] Role-based access
+
+@@@ 5
+  [ ] Flyway migrations
+  [ ] Pagination
+
+@@@ 6
+  [ ] Swagger / OpenAPI docs
+  [ ] Unit and integration tests
+
+@@@ 7
+  [ ] Docker & Docker Compose
+  [ ] Deploy
