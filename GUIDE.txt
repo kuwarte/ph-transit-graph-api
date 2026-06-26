@@ -182,15 +182,17 @@
 
   src/main/resources/
   ├── application.properties
-  └── db/migration/                         ← Flyway SQL migration files
-      ├── V1__create_users.sql
-      ├── V2__create_operators.sql
-      ├── V3__create_routes.sql
-      ├── V4__create_stops.sql
-      ├── V5__create_fares.sql
-      ├── V6__create_reports.sql
-      ├── V7__create_saved_routes.sql
-      └── V8__seed_sample_data.sql
+  └── db/migration/
+        ├── V1__create_places.sql
+        ├── V2__create_users.sql
+        ├── V3__create_operators.sql
+        ├── V4__create_routes.sql
+        ├── V5__create_stops.sql
+        ├── V6__create_fares.sql
+        ├── V7__create_reports.sql
+        ├── V8__create_saved_routes.sql
+        ├── V9__seed_places_cavite.sql
+        └── V10__seed_sample_routes.sql
 
 ================================================================================
   5. DATABASE ENTITIES & RELATIONSHIPS
@@ -217,12 +219,22 @@
   is_verified     BOOLEAN DEFAULT false  ← Admin must verify
   created_at      TIMESTAMP
 
+  PLACE
+  ─────────────────────────────────────────
+  id              UUID (primary key)
+  name            VARCHAR NOT NULL          ← e.g. "Pasong Kawayan 2"
+  municipality    VARCHAR NOT NULL          ← e.g. "General Trias"
+  province        VARCHAR NOT NULL          ← e.g. "Cavite"
+  latitude        DECIMAL(9,6)              ← center point of the place
+  longitude       DECIMAL(9,6)
+  created_at      TIMESTAMP
+
   ROUTE
   ─────────────────────────────────────────
   id              UUID (primary key)
   operator_id     UUID (FK → Operator)
-  route_code      VARCHAR UNIQUE NOT NULL ← e.g. "GEN-TRIAS-CUBAO"
-  route_name      VARCHAR NOT NULL        ← e.g. "General Trias - Cubao"
+  origin_id       UUID (FK → Place)         
+  destination_id  UUID (FK → Place)         
   origin          VARCHAR NOT NULL
   destination     VARCHAR NOT NULL
   vehicle_type    ENUM (JEEPNEY, BUS, UV_EXPRESS, TRICYCLE)
@@ -283,6 +295,8 @@
   Stop ──(N:1)──< Fare (from_stop and to_stop)
   User ──(N:M)──> Route (via SavedRoute)
   User ──(1:N)──> Report
+  Place ──(1:N)──> Route (as origin)
+ Place ──(1:N)──> Route (as destination)
 
 ================================================================================
   6. FULL API ENDPOINTS LIST
@@ -302,7 +316,18 @@
   POST   /auth/login                 [PUBLIC]    Login, returns JWT token
   POST   /auth/register/operator     [PUBLIC]    Register as operator (pending verify)
   GET    /auth/me                    [COMMUTER]  Get current logged-in user info
-  POST   /auth/refresh               [COMMUTER]  Refresh JWT token
+  POST   /auth/refresh               [COMMUTER]  Refresh JWT Token
+
+  ── PLACES ───────────────────────────────────────────────────────────────────
+
+  GET    /places                        [PUBLIC]   Get all places
+  GET    /places/{id}                   [PUBLIC]   Get a single place
+  GET    /places/search                 [PUBLIC]   Search places
+                                                 Query params: ?municipality=&province=
+  GET    /places/{id}/routes            [PUBLIC]   Get all routes from/to this place
+  POST   /places                        [ADMIN]    Add a new place
+  PUT    /places/{id}                   [ADMIN]    Update a place
+  DELETE /places/{id}                   [ADMIN]    Delete a place
 
   ── ROUTES ───────────────────────────────────────────────────────────────────
 
