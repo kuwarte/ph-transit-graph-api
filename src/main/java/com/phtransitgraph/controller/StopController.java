@@ -62,6 +62,6 @@ public class StopController {
     public ResponseEntity<List<StopResponse>> reorderStops(
             @PathVariable String routeId,
             @Valid @RequestBody StopReorderRequest req) {
-        return ResponseEntity.ok(stopService.reorderStops(routeId, req);
+        return ResponseEntity.ok(stopService.reorderStops(routeId, req));
     }
 }
