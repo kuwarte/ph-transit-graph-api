@@ -2,12 +2,14 @@ package com.phtransitgraph.service;
 
 import com.phtransitgraph.dto.request.RouteRequest;
 import com.phtransitgraph.dto.response.RouteResponse;
+import com.phtransitgraph.entity.Operator;
 import com.phtransitgraph.entity.Place;
 import com.phtransitgraph.entity.Route;
 import com.phtransitgraph.enums.RouteStatus;
 import com.phtransitgraph.enums.VehicleType;
 import com.phtransitgraph.exception.DuplicateResourceException;
 import com.phtransitgraph.exception.ResourceNotFoundException;
+import com.phtransitgraph.repository.OperatorRepository;
 import com.phtransitgraph.repository.PlaceRepository;
 import com.phtransitgraph.repository.RouteRepository;
 import org.springframework.stereotype.Service;
@@ -19,13 +21,16 @@ public class RouteService {
 
     private final RouteRepository routeRepository;
     private final PlaceRepository placeRepository;
+    private final OperatorRepository operatorRepository;
 
-    public RouteService(RouteRepository routeRepository, PlaceRepository placeRepository) {
+    public RouteService(RouteRepository routeRepository, PlaceRepository placeRepository,
+            OperatorRepository operatorRepository) {
         this.routeRepository = routeRepository;
         this.placeRepository = placeRepository;
+        this.operatorRepository = operatorRepository;
     }
 
-    private RouteResponse toResponse(Route route) {
+    RouteResponse toResponse(Route route) {
         return new RouteResponse(
                 route.getId(),
                 route.getRouteCode(),
@@ -36,6 +41,8 @@ public class RouteService {
                 route.getDestination().getMunicipality(),
                 route.getVehicleType().name(),
                 route.getStatus().name(),
+                route.getOperator() != null ? route.getOperator().getId() : null,
+                route.getOperator() != null ? route.getOperator().getOperatorName() : null,
                 route.getCreatedAt(),
                 route.getUpdatedAt());
     }
@@ -78,6 +85,13 @@ public class RouteService {
                 .toList();
     }
 
+    public List<RouteResponse> getRoutesByOperatorId(String operatorId) {
+        return routeRepository.findByOperatorId(operatorId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     public RouteResponse createRoute(RouteRequest request) {
         routeRepository.findByRouteCode(request.getRouteCode())
                 .ifPresent(existing -> {
@@ -93,6 +107,13 @@ public class RouteService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Destination place not found with id: " + request.getDestinationId()));
 
+        Operator operator = null;
+        if (request.getOperatorId() != null) {
+            operator = operatorRepository.findById(request.getOperatorId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Operator not found with id: " + request.getOperatorId()));
+        }
+
         Route route = Route.builder()
                 .routeCode(request.getRouteCode())
                 .routeName(request.getRouteName())
@@ -100,6 +121,7 @@ public class RouteService {
                 .destination(destination)
                 .vehicleType(VehicleType.valueOf(request.getVehicleType().toUpperCase()))
                 .status(RouteStatus.ACTIVE)
+                .operator(operator)
                 .build();
 
         return toResponse(routeRepository.save(route));
@@ -117,6 +139,13 @@ public class RouteService {
         Place destination = placeRepository.findById(request.getDestinationId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Destination place not found with id: " + request.getDestinationId()));
+
+        if (request.getOperatorId() != null) {
+            Operator operator = operatorRepository.findById(request.getOperatorId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Operator not found with id: " + request.getOperatorId()));
+            route.setOperator(operator);
+        }
 
         route.setRouteCode(request.getRouteCode());
         route.setRouteName(request.getRouteName());

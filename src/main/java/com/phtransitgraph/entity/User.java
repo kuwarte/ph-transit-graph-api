@@ -1,8 +1,7 @@
 package com.phtransitgraph.entity;
 
 import java.time.LocalDateTime;
-import com.phtransitgraph.enums.RouteStatus;
-import com.phtransitgraph.enums.VehicleType;
+import com.phtransitgraph.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,38 +13,28 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "routes")
-public class Route {
+@Table(name = "users")
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne
-    @JoinColumn(name = "operator_id")
-    private Operator operator;
+    @Column(unique = true, nullable = false)
+    private String email;
 
-    @Column(name = "route_code", unique = true, nullable = false)
-    private String routeCode;
+    @Column(nullable = false)
+    private String password;
 
-    @Column(name = "route_name", nullable = false)
-    private String routeName;
-
-    @ManyToOne
-    @JoinColumn(name = "origin_id", nullable = false)
-    private Place origin;
-
-    @ManyToOne
-    @JoinColumn(name = "destination_id", nullable = false)
-    private Place destination;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "vehicle_type", nullable = false)
-    private VehicleType vehicleType;
+    @Column(name = "full_name", nullable = false)
+    private String fullName;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private RouteStatus status = RouteStatus.ACTIVE;
+    private Role role;
+
+    @Column(name = "is_active", nullable = false)
+    private boolean active;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -55,6 +44,7 @@ public class Route {
 
     @PrePersist
     protected void onCreate() {
+        active = true;
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
