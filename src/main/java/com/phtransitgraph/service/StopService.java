@@ -53,6 +53,13 @@ public class StopService {
                 .toList();
     }
 
+    public StopResponse getStopById(String routeId, String stopId) {
+        findRouterOrThrow(routeId);
+        Stop stop = stopRepository.findByIdAndRouteId(stopId, routeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Stop not found with id " + stopId));
+        return toResponse(stop);
+    }
+
     public StopResponse addStop(String routeId, StopRequest req) {
         Route route = findRouterOrThrow(routeId);
         if (stopRepository.existsByRouteIdAndSequenceOrder(routeId, req.getSequenceOrder())) {
@@ -99,7 +106,7 @@ public class StopService {
     }
 
     @Transactional
-    public List<StopResponse> reorderStop(String routeId, StopReorderRequest req) {
+    public List<StopResponse> reorderStops(String routeId, StopReorderRequest req) {
         findRouterOrThrow(routeId);
         for (StopReorderItem item : req.getStops()) {
             Stop stop = stopRepository.findByIdAndRouteId(item.getStopId(), routeId)
