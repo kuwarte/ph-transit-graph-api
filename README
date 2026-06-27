@@ -59,6 +59,14 @@ Routes
   PATCH  /routes/{id}/status
   DELETE /routes/{id}
 
+Stops
+  GET    /routes/{routeId}/stops
+  GET    /routes/{routeId}/stops/{stopId}
+  POST   /routes/{routeId}/stops
+  PUT    /routes/{routeId}/stops/{stopId}
+  PATCH  /routes/{routeId}/stops/reorder
+  DELETE /routes/{routeId}/stops/{stopId}
+
 ----------------------------------------------------------------------------
 TODO
 ----------------------------------------------------------------------------
@@ -66,7 +74,7 @@ TODO
 @@@ 1
   [x] Place
   [x] Route
-  [ ] Stop
+  [x] Stop
   [ ] Fare
 
 @@@ 2
