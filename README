@@ -74,6 +74,14 @@ Fares
   PUT    /routes/{routeId}/fares/{fareId}
   DELETE /routes/{routeId}/fares/{fareId}
 
+Operators
+  GET    /operators
+  GET    /operators/{id}
+  GET    /operators/{id}/routes
+  GET    /operators/pending
+  PUT    /operators/{id}/profile
+  PATCH  /operators/{id}/verify
+
 ----------------------------------------------------------------------------
 TODO
 ----------------------------------------------------------------------------
@@ -85,8 +93,8 @@ TODO
   [x] Fare
 
 @@@ 2
-  [ ] User
-  [ ] Operator
+  [x] User
+  [x] Operator
 
 @@@ 3
   [ ] Report
