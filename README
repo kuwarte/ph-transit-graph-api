@@ -82,6 +82,19 @@ Operators
   PUT    /operators/{id}/profile
   PATCH  /operators/{id}/verify
 
+Reports
+  GET    /reports
+  GET    /reports/{id}
+  GET    /reports/my-reports?reporterId=
+  POST   /reports
+  PATCH  /reports/{id}/approve?reviewerId=
+  PATCH  /reports/{id}/reject?reviewerId=
+
+Commuter
+  GET    /commuter/saved-routes?userId=
+  POST   /commuter/saved-routes/{routeId}?userId=
+  DELETE /commuter/saved-routes/{routeId}?userId=
+
 ----------------------------------------------------------------------------
 TODO
 ----------------------------------------------------------------------------
@@ -97,8 +110,8 @@ TODO
   [x] Operator
 
 @@@ 3
-  [ ] Report
-  [ ] SavedRoute
+  [x] Report
+  [x] SavedRoute
 
 @@@ 4
   [ ] JWT auth
