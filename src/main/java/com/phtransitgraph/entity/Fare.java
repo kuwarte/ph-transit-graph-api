@@ -1,6 +1,7 @@
 package com.phtransitgraph.entity;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
@@ -40,7 +41,7 @@ public class Fare {
     private BigDecimal discountedFare;
 
     @Column(name = "effective_date", nullable = false)
-    private LocalDateTime effectiveDate;
+    private LocalDate effectiveDate;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
