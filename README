@@ -67,6 +67,13 @@ Stops
   PATCH  /routes/{routeId}/stops/reorder
   DELETE /routes/{routeId}/stops/{stopId}
 
+Fares
+  GET    /routes/{routeId}/fares
+  GET    /fares/calculate?from=&to=
+  POST   /routes/{routeId}/fares
+  PUT    /routes/{routeId}/fares/{fareId}
+  DELETE /routes/{routeId}/fares/{fareId}
+
 ----------------------------------------------------------------------------
 TODO
 ----------------------------------------------------------------------------
@@ -75,7 +82,7 @@ TODO
   [x] Place
   [x] Route
   [x] Stop
-  [ ] Fare
+  [x] Fare
 
 @@@ 2
   [ ] User
