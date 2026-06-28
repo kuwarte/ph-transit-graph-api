@@ -150,11 +150,11 @@ TODO
   [x] JWT auth
   [x] Role-based access
 @@@ 5
-  [ ] Flyway migrations
   [ ] Pagination
 @@@ 6
   [ ] Swagger / OpenAPI docs
   [ ] Unit and integration tests
 @@@ 7
+  [ ] Flyway migrations
   [ ] Docker & Docker Compose
   [ ] Deploy
