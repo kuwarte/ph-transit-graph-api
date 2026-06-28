@@ -10,20 +10,20 @@ import com.phtransitgraph.exception.DuplicateResourceException;
 import com.phtransitgraph.exception.ResourceNotFoundException;
 import com.phtransitgraph.repository.RouteRepository;
 import com.phtransitgraph.repository.SavedRouteRepository;
-import com.phtransitgraph.repository.UserRepository;
+import com.phtransitgraph.security.OwnershipValidator;
 
 @Service
 public class CommuterService {
 
     private final SavedRouteRepository savedRouteRepository;
-    private final UserRepository userRepository;
     private final RouteRepository routeRepository;
+    private final OwnershipValidator ownershipValidator;
 
     public CommuterService(SavedRouteRepository savedRouteRepository,
-            UserRepository userRepository, RouteRepository routeRepository) {
+            RouteRepository routeRepository, OwnershipValidator ownershipValidator) {
         this.savedRouteRepository = savedRouteRepository;
-        this.userRepository = userRepository;
         this.routeRepository = routeRepository;
+        this.ownershipValidator = ownershipValidator;
     }
 
     private SavedRouteResponse toResponse(SavedRoute savedRoute) {
@@ -40,42 +40,31 @@ public class CommuterService {
                 savedRoute.getSavedAt());
     }
 
-    private User findUserOrThrow(String userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "User not found with id: " + userId));
+    public List<SavedRouteResponse> getSavedRoutes(String email) {
+        User user = ownershipValidator.getUserFromEmail(email);
+        return savedRouteRepository.findByUserId(user.getId())
+                .stream().map(this::toResponse).toList();
     }
 
-    public List<SavedRouteResponse> getSavedRoutes(String userId) {
-        findUserOrThrow(userId);
-        return savedRouteRepository.findByUserId(userId)
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    public SavedRouteResponse saveRoute(String userId, String routeId) {
-        User user = findUserOrThrow(userId);
+    public SavedRouteResponse saveRoute(String email, String routeId) {
+        User user = ownershipValidator.getUserFromEmail(email);
         Route route = routeRepository.findById(routeId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Route not found with id: " + routeId));
-
-        if (savedRouteRepository.existsByUserIdAndRouteId(userId, routeId)) {
+        if (savedRouteRepository.existsByUserIdAndRouteId(user.getId(), routeId)) {
             throw new DuplicateResourceException("Route is already saved");
         }
-
         SavedRoute savedRoute = SavedRoute.builder()
                 .user(user)
                 .route(route)
                 .build();
-
         return toResponse(savedRouteRepository.save(savedRoute));
     }
 
-    public void removeSavedRoute(String userId, String routeId) {
-        findUserOrThrow(userId);
+    public void removeSavedRoute(String email, String routeId) {
+        User user = ownershipValidator.getUserFromEmail(email);
         SavedRoute savedRoute = savedRouteRepository
-                .findByUserIdAndRouteId(userId, routeId)
+                .findByUserIdAndRouteId(user.getId(), routeId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Saved route not found for this user and route"));
         savedRouteRepository.delete(savedRoute);
