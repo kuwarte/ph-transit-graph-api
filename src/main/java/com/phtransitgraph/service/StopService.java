@@ -107,8 +107,10 @@ public class StopService {
         return toResponse(stopRepository.save(stop));
     }
 
-    public void deleteStop(String routeId, String stopId) {
-        findRouterOrThrow(routeId);
+    public void deleteStop(String routeId, String stopId, String email) {
+        Route route = findRouterOrThrow(routeId);
+        ownershipValidator.assertOwnsRoute(route, email);
+
         Stop stop = stopRepository.findByIdAndRouteId(stopId, routeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Stop not found with id " + stopId));
         stopRepository.delete(stop);
