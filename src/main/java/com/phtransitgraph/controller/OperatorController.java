@@ -2,6 +2,9 @@ package com.phtransitgraph.controller;
 
 import java.util.List;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import com.phtransitgraph.dto.request.OperatorRequest;
 import com.phtransitgraph.dto.response.OperatorResponse;
@@ -37,22 +40,23 @@ public class OperatorController {
         return ResponseEntity.ok(routeService.getRoutesByOperatorId(id));
     }
 
-    // temp
-    @PutMapping("/{id}/profile")
+    @PutMapping("/profile")
+    @PreAuthorize("hasRole('OPERATOR')")
     public ResponseEntity<OperatorResponse> updateProfile(
-            @PathVariable String id,
-            @Valid @RequestBody OperatorRequest req) {
-        return ResponseEntity.ok(operatorService.updateProfile(id, req));
+            @Valid @RequestBody OperatorRequest req,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                operatorService.updateProfile(userDetails.getUsername(), req));
     }
 
-    // temp
     @GetMapping("/pending")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<OperatorResponse>> getPendingOperators() {
         return ResponseEntity.ok(operatorService.getPendingOperators());
     }
 
-    // temp
     @PatchMapping("/{id}/verify")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<OperatorResponse> verifyOperator(@PathVariable String id) {
         return ResponseEntity.ok(operatorService.verifyOperator(id));
     }

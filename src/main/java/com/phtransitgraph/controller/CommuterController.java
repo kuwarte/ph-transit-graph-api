@@ -3,12 +3,16 @@ package com.phtransitgraph.controller;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import com.phtransitgraph.dto.response.SavedRouteResponse;
 import com.phtransitgraph.service.CommuterService;
 
 @RestController
 @RequestMapping("/api/v1/commuter")
+@PreAuthorize("isAuthenticated()")
 public class CommuterController {
 
     private final CommuterService commuterService;
@@ -17,26 +21,26 @@ public class CommuterController {
         this.commuterService = commuterService;
     }
 
-    // temp
     @GetMapping("/saved-routes")
     public ResponseEntity<List<SavedRouteResponse>> getSavedRoutes(
-            @RequestParam String userId) {
-        return ResponseEntity.ok(commuterService.getSavedRoutes(userId));
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                commuterService.getSavedRoutes(userDetails.getUsername()));
     }
 
     @PostMapping("/saved-routes/{routeId}")
     public ResponseEntity<SavedRouteResponse> saveRoute(
             @PathVariable String routeId,
-            @RequestParam String userId) {
+            @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(commuterService.saveRoute(userId, routeId));
+                .body(commuterService.saveRoute(userDetails.getUsername(), routeId));
     }
 
     @DeleteMapping("/saved-routes/{routeId}")
     public ResponseEntity<Void> removeSavedRoute(
             @PathVariable String routeId,
-            @RequestParam String userId) {
-        commuterService.removeSavedRoute(userId, routeId);
+            @AuthenticationPrincipal UserDetails userDetails) {
+        commuterService.removeSavedRoute(userDetails.getUsername(), routeId);
         return ResponseEntity.noContent().build();
     }
 }

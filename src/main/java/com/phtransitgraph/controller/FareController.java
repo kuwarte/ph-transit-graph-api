@@ -3,6 +3,9 @@ package com.phtransitgraph.controller;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import com.phtransitgraph.dto.request.FareRequest;
 import com.phtransitgraph.dto.response.FareResponse;
@@ -32,26 +35,33 @@ public class FareController {
     }
 
     @PostMapping("/routes/{routeId}/fares")
+    @PreAuthorize("hasRole('OPERATOR')")
     public ResponseEntity<FareResponse> addFare(
             @PathVariable String routeId,
-            @Valid @RequestBody FareRequest req) {
+            @Valid @RequestBody FareRequest req,
+            @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(fareService.addFare(routeId, req));
+                .body(fareService.addFare(routeId, req, userDetails.getUsername()));
     }
 
     @PutMapping("/routes/{routeId}/fares/{fareId}")
+    @PreAuthorize("hasRole('OPERATOR')")
     public ResponseEntity<FareResponse> updateFare(
             @PathVariable String routeId,
             @PathVariable String fareId,
-            @Valid @RequestBody FareRequest req) {
-        return ResponseEntity.ok(fareService.updateFare(routeId, fareId, req));
+            @Valid @RequestBody FareRequest req,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                fareService.updateFare(routeId, fareId, req, userDetails.getUsername()));
     }
 
     @DeleteMapping("/routes/{routeId}/fares/{fareId}")
+    @PreAuthorize("hasRole('OPERATOR')")
     public ResponseEntity<Void> deleteFare(
             @PathVariable String routeId,
-            @PathVariable String fareId) {
-        fareService.deleteFare(routeId, fareId);
+            @PathVariable String fareId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        fareService.deleteFare(routeId, fareId, userDetails.getUsername());
         return ResponseEntity.noContent().build();
     }
 }

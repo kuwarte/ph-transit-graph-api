@@ -1,14 +1,16 @@
 package com.phtransitgraph.controller;
 
+import java.util.List;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
 import com.phtransitgraph.dto.request.RouteRequest;
 import com.phtransitgraph.dto.response.RouteResponse;
 import com.phtransitgraph.service.RouteService;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/routes")
@@ -43,26 +45,39 @@ public class RouteController {
         return ResponseEntity.ok(routeService.getRouteByCode(routeCode));
     }
 
+    @GetMapping("/my-routes")
+    @PreAuthorize("hasRole('OPERATOR')")
+    public ResponseEntity<List<RouteResponse>> getMyRoutes(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(routeService.getMyRoutes(userDetails.getUsername()));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<RouteResponse> getRouteById(@PathVariable String id) {
         return ResponseEntity.ok(routeService.getRouteById(id));
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('OPERATOR')")
     public ResponseEntity<RouteResponse> createRoute(
-            @Valid @RequestBody RouteRequest request) {
+            @Valid @RequestBody RouteRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(routeService.createRoute(request));
+                .body(routeService.createRoute(request, userDetails.getUsername()));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('OPERATOR')")
     public ResponseEntity<RouteResponse> updateRoute(
             @PathVariable String id,
-            @Valid @RequestBody RouteRequest request) {
-        return ResponseEntity.ok(routeService.updateRoute(id, request));
+            @Valid @RequestBody RouteRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(
+                routeService.updateRoute(id, request, userDetails.getUsername()));
     }
 
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RouteResponse> updateRouteStatus(
             @PathVariable String id,
             @RequestParam String status) {
@@ -70,8 +85,11 @@ public class RouteController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRoute(@PathVariable String id) {
-        routeService.deleteRoute(id);
+    @PreAuthorize("hasRole('OPERATOR')")
+    public ResponseEntity<Void> deleteRoute(
+            @PathVariable String id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        routeService.deleteRoute(id, userDetails.getUsername());
         return ResponseEntity.noContent().build();
     }
 }
