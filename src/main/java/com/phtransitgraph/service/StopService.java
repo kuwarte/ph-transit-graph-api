@@ -14,6 +14,7 @@ import com.phtransitgraph.exception.DuplicateResourceException;
 import com.phtransitgraph.exception.ResourceNotFoundException;
 import com.phtransitgraph.repository.RouteRepository;
 import com.phtransitgraph.repository.StopRepository;
+import com.phtransitgraph.security.OwnershipValidator;
 
 import jakarta.transaction.Transactional;
 
@@ -21,10 +22,14 @@ import jakarta.transaction.Transactional;
 public class StopService {
     private final StopRepository stopRepository;
     private final RouteRepository routeRepository;
+    private final OwnershipValidator ownershipValidator;
 
-    public StopService(StopRepository stopRepository, RouteRepository routeRepository) {
+    public StopService(StopRepository stopRepository, RouteRepository routeRepository,
+            OwnershipValidator ownershipValidator) {
         this.stopRepository = stopRepository;
         this.routeRepository = routeRepository;
+        this.ownershipValidator = ownershipValidator;
+
     }
 
     private StopResponse toResponse(Stop stop) {
@@ -60,8 +65,10 @@ public class StopService {
         return toResponse(stop);
     }
 
-    public StopResponse addStop(String routeId, StopRequest req) {
+    public StopResponse addStop(String routeId, StopRequest req, String email) {
         Route route = findRouterOrThrow(routeId);
+        ownershipValidator.assertOwnsRoute(route, email);
+
         if (stopRepository.existsByRouteIdAndSequenceOrder(routeId, req.getSequenceOrder())) {
             throw new DuplicateResourceException(
                     "A stop with sequence order " + req.getSequenceOrder() + " already exists on this route");
@@ -79,8 +86,10 @@ public class StopService {
         return toResponse(stopRepository.save(stop));
     }
 
-    public StopResponse updateStop(String routeId, String stopId, StopRequest req) {
-        findRouterOrThrow(routeId);
+    public StopResponse updateStop(String routeId, String stopId, StopRequest req, String email) {
+        Route route = findRouterOrThrow(routeId);
+        ownershipValidator.assertOwnsRoute(route, email);
+
         Stop stop = stopRepository.findByIdAndRouteId(stopId, routeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Stop not found with id " + stopId));
 
@@ -106,8 +115,10 @@ public class StopService {
     }
 
     @Transactional
-    public List<StopResponse> reorderStops(String routeId, StopReorderRequest req) {
-        findRouterOrThrow(routeId);
+    public List<StopResponse> reorderStops(String routeId, StopReorderRequest req, String email) {
+        Route route = findRouterOrThrow(routeId);
+        ownershipValidator.assertOwnsRoute(route, email);
+
         for (StopReorderItem item : req.getStops()) {
             Stop stop = stopRepository.findByIdAndRouteId(item.getStopId(), routeId)
                     .orElseThrow(() -> new ResourceNotFoundException(
