@@ -8,14 +8,18 @@ import com.phtransitgraph.entity.Operator;
 import com.phtransitgraph.exception.DuplicateResourceException;
 import com.phtransitgraph.exception.ResourceNotFoundException;
 import com.phtransitgraph.repository.OperatorRepository;
+import com.phtransitgraph.security.OwnershipValidator;
 
 @Service
 public class OperatorService {
 
     private final OperatorRepository operatorRepository;
+    private final OwnershipValidator ownershipValidator;
 
-    public OperatorService(OperatorRepository operatorRepository) {
+    public OperatorService(OperatorRepository operatorRepository,
+            OwnershipValidator ownershipValidator) {
         this.operatorRepository = operatorRepository;
+        this.ownershipValidator = ownershipValidator;
     }
 
     private OperatorResponse toResponse(Operator operator) {
@@ -33,16 +37,12 @@ public class OperatorService {
 
     public List<OperatorResponse> getAllVerifiedOperators() {
         return operatorRepository.findByVerifiedTrue()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+                .stream().map(this::toResponse).toList();
     }
 
     public List<OperatorResponse> getPendingOperators() {
         return operatorRepository.findByVerifiedFalse()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+                .stream().map(this::toResponse).toList();
     }
 
     public OperatorResponse getOperatorById(String id) {
@@ -52,10 +52,8 @@ public class OperatorService {
         return toResponse(operator);
     }
 
-    public OperatorResponse updateProfile(String operatorId, OperatorRequest req) {
-        Operator operator = operatorRepository.findById(operatorId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Operator not found with id: " + operatorId));
+    public OperatorResponse updateProfile(String email, OperatorRequest req) {
+        Operator operator = ownershipValidator.getOperatorFromEmail(email);
         if (req.getFranchiseNo() != null &&
                 !req.getFranchiseNo().equals(operator.getFranchiseNo()) &&
                 operatorRepository.existsByFranchiseNo(req.getFranchiseNo())) {
