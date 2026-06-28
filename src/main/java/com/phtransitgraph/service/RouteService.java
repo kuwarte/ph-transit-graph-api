@@ -93,6 +93,12 @@ public class RouteService {
                 .toList();
     }
 
+    public List<RouteResponse> getMyRoutes(String email) {
+        Operator operator = ownershipValidator.getOperatorFromEmail(email);
+        return routeRepository.findByOperatorId(operator.getId())
+                .stream().map(this::toResponse).toList();
+    }
+
     public RouteResponse createRoute(RouteRequest req, String email) {
         routeRepository.findByRouteCode(req.getRouteCode())
                 .ifPresent(existing -> {
