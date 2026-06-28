@@ -8,6 +8,7 @@ import com.phtransitgraph.entity.User;
 import com.phtransitgraph.enums.Role;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
 import com.phtransitgraph.dto.request.LoginRequest;
 import com.phtransitgraph.dto.request.OperatorRegisterRequest;
@@ -22,6 +23,7 @@ import com.phtransitgraph.security.JwtUtil;
 
 import jakarta.transaction.Transactional;
 
+@Service
 public class AuthService {
 
     private final UserRepository userRepository;
