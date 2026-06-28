@@ -12,6 +12,7 @@ import com.phtransitgraph.exception.ResourceNotFoundException;
 import com.phtransitgraph.repository.FareRepository;
 import com.phtransitgraph.repository.RouteRepository;
 import com.phtransitgraph.repository.StopRepository;
+import com.phtransitgraph.security.OwnershipValidator;
 
 @Service
 public class FareService {
@@ -19,12 +20,15 @@ public class FareService {
     private final FareRepository fareRepository;
     private final RouteRepository routeRepository;
     private final StopRepository stopRepository;
+    private final OwnershipValidator ownershipValidator;
 
     public FareService(FareRepository fareRepository, RouteRepository routeRepository,
-            StopRepository stopRepository) {
+            StopRepository stopRepository, OwnershipValidator ownershipValidator) {
         this.fareRepository = fareRepository;
         this.routeRepository = routeRepository;
         this.stopRepository = stopRepository;
+        this.ownershipValidator = ownershipValidator;
+
     }
 
     private FareResponse toResponse(Fare fare) {
@@ -70,8 +74,10 @@ public class FareService {
                         "No fare found between stop " + fromStopId + " and stop " + toStopId));
     }
 
-    public FareResponse addFare(String routeId, FareRequest req) {
+    public FareResponse addFare(String routeId, FareRequest req, String email) {
         Route route = findRouteOrThrow(routeId);
+
+        ownershipValidator.assertOwnsRoute(route, email);
 
         if (req.getFromStopId().equals(req.getToStopId())) {
             throw new IllegalArgumentException("from stop and to stop cannot be the same");
@@ -98,8 +104,10 @@ public class FareService {
         return toResponse(fareRepository.save(fare));
     }
 
-    public FareResponse updateFare(String routeId, String fareId, FareRequest req) {
-        findRouteOrThrow(routeId);
+    public FareResponse updateFare(String routeId, String fareId, FareRequest req, String email) {
+        Route route = findRouteOrThrow(routeId);
+
+        ownershipValidator.assertOwnsRoute(route, email);
 
         Fare fare = fareRepository.findByIdAndRouteId(fareId, routeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Fare not found with id " + fareId));
@@ -131,8 +139,10 @@ public class FareService {
         return toResponse(fareRepository.save(fare));
     }
 
-    public void deleteFare(String routeId, String fareId) {
-        findRouteOrThrow(routeId);
+    public void deleteFare(String routeId, String fareId, String email) {
+        Route route = findRouteOrThrow(routeId);
+        ownershipValidator.assertOwnsRoute(route, email);
+
         Fare fare = fareRepository.findByIdAndRouteId(fareId, routeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Fare not found with id " + fareId));
         fareRepository.delete(fare);
