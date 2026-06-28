@@ -2,9 +2,12 @@ package com.phtransitgraph.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.phtransitgraph.dto.response.AnalyticsResponse;
+import com.phtransitgraph.dto.response.PageResponse;
 import com.phtransitgraph.dto.response.UserResponse;
 import com.phtransitgraph.entity.User;
 import com.phtransitgraph.exception.ResourceNotFoundException;
@@ -34,11 +37,15 @@ public class AdminService {
                 user.getCreatedAt(), user.getUpdatedAt());
     }
 
-    public List<UserResponse> getAllUsers() {
-        return userRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+    public PageResponse<UserResponse> getAllUsers(int page, int size) {
+        Page<User> result = userRepository.findAll(PageRequest.of(page, size));
+        return new PageResponse<>(
+                result.getContent().stream().map(this::toResponse).toList(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages(),
+                result.isLast());
     }
 
     public UserResponse getUserById(String id) {

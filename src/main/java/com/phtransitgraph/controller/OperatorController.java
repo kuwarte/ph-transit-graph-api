@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import com.phtransitgraph.dto.request.OperatorRequest;
 import com.phtransitgraph.dto.response.OperatorResponse;
+import com.phtransitgraph.dto.response.PageResponse;
 import com.phtransitgraph.dto.response.RouteResponse;
 import com.phtransitgraph.service.OperatorService;
 import com.phtransitgraph.service.RouteService;
@@ -26,8 +27,10 @@ public class OperatorController {
     }
 
     @GetMapping
-    public ResponseEntity<List<OperatorResponse>> getAllVerifiedOperators() {
-        return ResponseEntity.ok(operatorService.getAllVerifiedOperators());
+    public ResponseEntity<PageResponse<OperatorResponse>> getAllVerifiedOperators(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(operatorService.getAllVerifiedOperators(page, size));
     }
 
     @GetMapping("/{id}")

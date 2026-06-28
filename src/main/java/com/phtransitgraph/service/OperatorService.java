@@ -1,9 +1,13 @@
 package com.phtransitgraph.service;
 
 import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import com.phtransitgraph.dto.request.OperatorRequest;
 import com.phtransitgraph.dto.response.OperatorResponse;
+import com.phtransitgraph.dto.response.PageResponse;
 import com.phtransitgraph.entity.Operator;
 import com.phtransitgraph.exception.DuplicateResourceException;
 import com.phtransitgraph.exception.ResourceNotFoundException;
@@ -35,9 +39,16 @@ public class OperatorService {
                 operator.getCreatedAt());
     }
 
-    public List<OperatorResponse> getAllVerifiedOperators() {
-        return operatorRepository.findByVerifiedTrue()
-                .stream().map(this::toResponse).toList();
+    public PageResponse<OperatorResponse> getAllVerifiedOperators(int page, int size) {
+        Page<Operator> result = operatorRepository.findByVerifiedTrue(
+                PageRequest.of(page, size));
+        return new PageResponse<>(
+                result.getContent().stream().map(this::toResponse).toList(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages(),
+                result.isLast());
     }
 
     public List<OperatorResponse> getPendingOperators() {

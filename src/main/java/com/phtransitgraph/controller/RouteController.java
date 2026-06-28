@@ -23,8 +23,10 @@ public class RouteController {
     }
 
     @GetMapping
-    public ResponseEntity<List<RouteResponse>> getAllRoutes() {
-        return ResponseEntity.ok(routeService.getAllRoutes());
+    public ResponseEntity<PageResponse<RouteResponse>> getAllRoutes(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(routeService.getAllRoutes(page, size));
     }
 
     @GetMapping("/search")

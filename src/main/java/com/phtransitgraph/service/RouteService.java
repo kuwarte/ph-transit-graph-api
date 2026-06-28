@@ -1,6 +1,7 @@
 package com.phtransitgraph.service;
 
 import com.phtransitgraph.dto.request.RouteRequest;
+import com.phtransitgraph.dto.response.PageResponse;
 import com.phtransitgraph.dto.response.RouteResponse;
 import com.phtransitgraph.entity.Operator;
 import com.phtransitgraph.entity.Place;
@@ -13,6 +14,8 @@ import com.phtransitgraph.repository.PlaceRepository;
 import com.phtransitgraph.repository.RouteRepository;
 import com.phtransitgraph.security.OwnershipValidator;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -48,11 +51,15 @@ public class RouteService {
                 route.getUpdatedAt());
     }
 
-    public List<RouteResponse> getAllRoutes() {
-        return routeRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+    public PageResponse<RouteResponse> getAllRoutes(int page, int size) {
+        Page<Route> result = routeRepository.findAll(PageRequest.of(page, size));
+        return new PageResponse<>(
+                result.getContent().stream().map(this::toResponse).toList(),
+                result.getNumber(),
+                result.getSize(),
+                result.getTotalElements(),
+                result.getTotalPages(),
+                result.isLast());
     }
 
     public RouteResponse getRouteById(String id) {
