@@ -12,6 +12,7 @@ PostgreSQL 16
 Maven
 Lombok
 Bean Validation
+Spring Security + JWT
 
 ----------------------------------------------------------------------------
 GETTING STARTED
@@ -21,18 +22,34 @@ Prerequisites
 - Java 21+
 - PostgreSQL
 - Maven
-
 Setup
   git clone https://github.com/kuwarte/ph-transit-graph-api.git
   cd ph-transit-graph-api
   cp .env.example .env
   mvn spring-boot:run
-
 Database
   CREATE DATABASE ph_transit_graph;
   CREATE USER transituser WITH PASSWORD 'yourpassword';
   GRANT ALL PRIVILEGES ON DATABASE ph_transit_graph TO transituser;
   GRANT ALL ON SCHEMA public TO transituser;
+Environment variables (.env)
+  APP_NAME=ph-transit-graph
+  DB_URL=jdbc:postgresql://localhost:5432/ph_transit_graph
+  DB_USERNAME=transituser
+  DB_PASSWORD=yourpassword
+  JWT_SECRET=your-base64-secret
+  JWT_EXPIRATION=86400000
+
+----------------------------------------------------------------------------
+AUTHENTICATION
+----------------------------------------------------------------------------
+
+Protected endpoints require a Bearer token in the Authorization header.
+  Authorization: Bearer <token>
+Roles
+  COMMUTER  → saved routes, submit reports
+  OPERATOR  → manage own routes, stops, fares
+  ADMIN     → verify operators, manage reports, platform analytics
 
 ----------------------------------------------------------------------------
 API ENDPOINTS
@@ -40,60 +57,79 @@ API ENDPOINTS
 
 Base URL: http://localhost:8080/api/v1
 
+Legend
+  [PUBLIC]   no auth required
+  [AUTH]     any authenticated user
+  [OPERATOR] requires OPERATOR role
+  [ADMIN]    requires ADMIN role
+
+Auth
+  POST   /auth/register               [PUBLIC]
+  POST   /auth/register/operator      [PUBLIC]
+  POST   /auth/login                  [PUBLIC]
+  GET    /auth/me                     [AUTH]
+
 Places
-  GET    /places
-  GET    /places/{id}
-  GET    /places/search?municipality=&province=
-  POST   /places
-  PUT    /places/{id}
-  DELETE /places/{id}
+  GET    /places                      [PUBLIC]
+  GET    /places/{id}                 [PUBLIC]
+  GET    /places/search?municipality=&province=  [PUBLIC]
+  POST   /places                      [ADMIN]
+  PUT    /places/{id}                 [ADMIN]
+  DELETE /places/{id}                 [ADMIN]
 
 Routes
-  GET    /routes
-  GET    /routes/{id}
-  GET    /routes/search?origin=&destination=
-  GET    /routes/vehicle/{type}
-  GET    /routes/code/{routeCode}
-  POST   /routes
-  PUT    /routes/{id}
-  PATCH  /routes/{id}/status
-  DELETE /routes/{id}
+  GET    /routes                      [PUBLIC]
+  GET    /routes/{id}                 [PUBLIC]
+  GET    /routes/search?origin=&destination=     [PUBLIC]
+  GET    /routes/vehicle/{type}       [PUBLIC]
+  GET    /routes/code/{routeCode}     [PUBLIC]
+  GET    /routes/my-routes            [OPERATOR]
+  POST   /routes                      [OPERATOR]
+  PUT    /routes/{id}                 [OPERATOR]
+  PATCH  /routes/{id}/status          [ADMIN]
+  DELETE /routes/{id}                 [OPERATOR]
 
 Stops
-  GET    /routes/{routeId}/stops
-  GET    /routes/{routeId}/stops/{stopId}
-  POST   /routes/{routeId}/stops
-  PUT    /routes/{routeId}/stops/{stopId}
-  PATCH  /routes/{routeId}/stops/reorder
-  DELETE /routes/{routeId}/stops/{stopId}
+  GET    /routes/{routeId}/stops                 [PUBLIC]
+  GET    /routes/{routeId}/stops/{stopId}        [PUBLIC]
+  POST   /routes/{routeId}/stops                 [OPERATOR]
+  PUT    /routes/{routeId}/stops/{stopId}        [OPERATOR]
+  PATCH  /routes/{routeId}/stops/reorder         [OPERATOR]
+  DELETE /routes/{routeId}/stops/{stopId}        [OPERATOR]
 
 Fares
-  GET    /routes/{routeId}/fares
-  GET    /fares/calculate?from=&to=
-  POST   /routes/{routeId}/fares
-  PUT    /routes/{routeId}/fares/{fareId}
-  DELETE /routes/{routeId}/fares/{fareId}
+  GET    /routes/{routeId}/fares                 [PUBLIC]
+  GET    /fares/calculate?from=&to=              [PUBLIC]
+  POST   /routes/{routeId}/fares                 [OPERATOR]
+  PUT    /routes/{routeId}/fares/{fareId}        [OPERATOR]
+  DELETE /routes/{routeId}/fares/{fareId}        [OPERATOR]
 
 Operators
-  GET    /operators
-  GET    /operators/{id}
-  GET    /operators/{id}/routes
-  GET    /operators/pending
-  PUT    /operators/{id}/profile
-  PATCH  /operators/{id}/verify
+  GET    /operators                   [PUBLIC]
+  GET    /operators/{id}              [PUBLIC]
+  GET    /operators/{id}/routes       [PUBLIC]
+  GET    /operators/pending           [ADMIN]
+  PUT    /operators/profile           [OPERATOR]
+  PATCH  /operators/{id}/verify       [ADMIN]
 
 Reports
-  GET    /reports
-  GET    /reports/{id}
-  GET    /reports/my-reports?reporterId=
-  POST   /reports
-  PATCH  /reports/{id}/approve?reviewerId=
-  PATCH  /reports/{id}/reject?reviewerId=
+  GET    /reports                     [ADMIN]
+  GET    /reports/{id}                [ADMIN]
+  GET    /reports/my-reports          [AUTH]
+  POST   /reports                     [AUTH]
+  PATCH  /reports/{id}/approve        [ADMIN]
+  PATCH  /reports/{id}/reject         [ADMIN]
 
 Commuter
-  GET    /commuter/saved-routes?userId=
-  POST   /commuter/saved-routes/{routeId}?userId=
-  DELETE /commuter/saved-routes/{routeId}?userId=
+  GET    /commuter/saved-routes             [AUTH]
+  POST   /commuter/saved-routes/{routeId}   [AUTH]
+  DELETE /commuter/saved-routes/{routeId}   [AUTH]
+
+Admin
+  GET    /admin/users                 [ADMIN]
+  GET    /admin/users/{id}            [ADMIN]
+  PATCH  /admin/users/{id}/deactivate [ADMIN]
+  GET    /admin/analytics             [ADMIN]
 
 ----------------------------------------------------------------------------
 TODO
@@ -104,27 +140,21 @@ TODO
   [x] Route
   [x] Stop
   [x] Fare
-
 @@@ 2
   [x] User
   [x] Operator
-
 @@@ 3
   [x] Report
   [x] SavedRoute
-
 @@@ 4
-  [ ] JWT auth
-  [ ] Role-based access
-
+  [x] JWT auth
+  [x] Role-based access
 @@@ 5
   [ ] Flyway migrations
   [ ] Pagination
-
 @@@ 6
   [ ] Swagger / OpenAPI docs
   [ ] Unit and integration tests
-
 @@@ 7
   [ ] Docker & Docker Compose
   [ ] Deploy
