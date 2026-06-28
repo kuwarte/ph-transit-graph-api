@@ -1,5 +1,7 @@
 package com.phtransitgraph.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import com.phtransitgraph.dto.response.FareResponse;
 import com.phtransitgraph.service.FareService;
 import jakarta.validation.Valid;
 
+@Tag(name = "Fares", description = "Manage fare matrices and calculate fares between stops")
 @RestController
 @RequestMapping("/api/v1")
 public class FareController {
@@ -22,11 +25,13 @@ public class FareController {
         this.fareService = fareService;
     }
 
+    @Operation(summary = "Get full fare matrix for a route")
     @GetMapping("/routes/{routeId}/fares")
     public ResponseEntity<List<FareResponse>> getFaresByRoute(@PathVariable String routeId) {
         return ResponseEntity.ok(fareService.getFaresByRouteId(routeId));
     }
 
+    @Operation(summary = "Calculate fare between two stops using their IDs")
     @GetMapping("/fares/calculate")
     public ResponseEntity<FareResponse> calculateFare(
             @RequestParam String from,
@@ -34,6 +39,7 @@ public class FareController {
         return ResponseEntity.ok(fareService.calculateFare(from, to));
     }
 
+    @Operation(summary = "Add a fare entry to a route (operator only, must own the route)")
     @PostMapping("/routes/{routeId}/fares")
     @PreAuthorize("hasRole('OPERATOR')")
     public ResponseEntity<FareResponse> addFare(
@@ -44,6 +50,7 @@ public class FareController {
                 .body(fareService.addFare(routeId, req, userDetails.getUsername()));
     }
 
+    @Operation(summary = "Update a fare entry (operator only, must own the route)")
     @PutMapping("/routes/{routeId}/fares/{fareId}")
     @PreAuthorize("hasRole('OPERATOR')")
     public ResponseEntity<FareResponse> updateFare(
@@ -55,6 +62,7 @@ public class FareController {
                 fareService.updateFare(routeId, fareId, req, userDetails.getUsername()));
     }
 
+    @Operation(summary = "Delete a fare entry (operator only, must own the route)")
     @DeleteMapping("/routes/{routeId}/fares/{fareId}")
     @PreAuthorize("hasRole('OPERATOR')")
     public ResponseEntity<Void> deleteFare(

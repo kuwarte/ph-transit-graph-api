@@ -1,5 +1,7 @@
 package com.phtransitgraph.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,7 @@ import com.phtransitgraph.dto.response.ReportResponse;
 import com.phtransitgraph.service.ReportService;
 import jakarta.validation.Valid;
 
+@Tag(name = "Reports", description = "Submit and review community data correction reports")
 @RestController
 @RequestMapping("/api/v1/reports")
 public class ReportController {
@@ -23,6 +26,7 @@ public class ReportController {
         this.reportService = reportService;
     }
 
+    @Operation(summary = "Submit a report flagging incorrect data")
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ReportResponse> submitReport(
@@ -32,6 +36,7 @@ public class ReportController {
                 .body(reportService.submitReport(req, userDetails.getUsername()));
     }
 
+    @Operation(summary = "Get all reports submitted by the authenticated user")
     @GetMapping("/my-reports")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<ReportResponse>> getMyReports(
@@ -39,6 +44,7 @@ public class ReportController {
         return ResponseEntity.ok(reportService.getMyReports(userDetails.getUsername()));
     }
 
+    @Operation(summary = "Get all reports, optionally filtered by status (admin only)")
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ReportResponse>> getAllReports(
@@ -46,12 +52,14 @@ public class ReportController {
         return ResponseEntity.ok(reportService.getAllReports(status));
     }
 
+    @Operation(summary = "Get a single report by ID (admin only)")
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ReportResponse> getReportById(@PathVariable String id) {
         return ResponseEntity.ok(reportService.getReportById(id));
     }
 
+    @Operation(summary = "Approve a report (admin only)")
     @PatchMapping("/{id}/approve")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ReportResponse> approveReport(
@@ -61,6 +69,7 @@ public class ReportController {
                 reportService.approveReport(id, userDetails.getUsername()));
     }
 
+    @Operation(summary = "Reject a report with a reason (admin only)")
     @PatchMapping("/{id}/reject")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ReportResponse> rejectReport(
