@@ -150,7 +150,7 @@ TODO
   [x] JWT auth
   [x] Role-based access
 @@@ 5
-  [ ] Pagination
+  [x] Pagination
 @@@ 6
   [ ] Swagger / OpenAPI docs
   [ ] Unit and integration tests
