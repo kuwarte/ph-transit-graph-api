@@ -22,6 +22,4 @@ public class RouteRequest {
     @NotBlank(message = "vehicleType is required")
     private String vehicleType;
 
-    private String operatorId;
-
 }

@@ -6,10 +6,6 @@ import lombok.Data;
 @Data
 public class ReportRequest {
 
-    // temp
-    @NotBlank(message = "reporterId is required")
-    private String reporterId;
-
     private String routeId;
     private String stopId;
     private String fareId;
