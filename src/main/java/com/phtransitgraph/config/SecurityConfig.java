@@ -35,12 +35,13 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-ui/**").permitAll()
+                        .requestMatchers("/swagger-ui.html").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/places/**").permitAll()
-                        // /my-routes must come before the broad /** to stay authenticated
                         .requestMatchers(HttpMethod.GET, "/api/v1/routes/my-routes").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/routes/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/fares/**").permitAll()
-                        // pending must come before the broad /** to stay authenticated
                         .requestMatchers(HttpMethod.GET, "/api/v1/operators/pending").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/operators/**").permitAll()
                         .anyRequest().authenticated())
