@@ -9,9 +9,10 @@ import com.phtransitgraph.enums.RouteStatus;
 import com.phtransitgraph.enums.VehicleType;
 import com.phtransitgraph.exception.DuplicateResourceException;
 import com.phtransitgraph.exception.ResourceNotFoundException;
-import com.phtransitgraph.repository.OperatorRepository;
 import com.phtransitgraph.repository.PlaceRepository;
 import com.phtransitgraph.repository.RouteRepository;
+import com.phtransitgraph.security.OwnershipValidator;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,13 +22,13 @@ public class RouteService {
 
     private final RouteRepository routeRepository;
     private final PlaceRepository placeRepository;
-    private final OperatorRepository operatorRepository;
+    private final OwnershipValidator ownershipValidator;
 
     public RouteService(RouteRepository routeRepository, PlaceRepository placeRepository,
-            OperatorRepository operatorRepository) {
+            OwnershipValidator ownershipValidator) {
         this.routeRepository = routeRepository;
         this.placeRepository = placeRepository;
-        this.operatorRepository = operatorRepository;
+        this.ownershipValidator = ownershipValidator;
     }
 
     RouteResponse toResponse(Route route) {
@@ -92,67 +93,50 @@ public class RouteService {
                 .toList();
     }
 
-    public RouteResponse createRoute(RouteRequest request) {
-        routeRepository.findByRouteCode(request.getRouteCode())
+    public RouteResponse createRoute(RouteRequest req, String email) {
+        routeRepository.findByRouteCode(req.getRouteCode())
                 .ifPresent(existing -> {
                     throw new DuplicateResourceException(
-                            "Route with code '" + request.getRouteCode() + "' already exists");
+                            "Route with code '" + req.getRouteCode() + "' already exists");
                 });
-
-        Place origin = placeRepository.findById(request.getOriginId())
+        Place origin = placeRepository.findById(req.getOriginId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Origin place not found with id: " + request.getOriginId()));
-
-        Place destination = placeRepository.findById(request.getDestinationId())
+                        "Origin place not found with id: " + req.getOriginId()));
+        Place destination = placeRepository.findById(req.getDestinationId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Destination place not found with id: " + request.getDestinationId()));
-
-        Operator operator = null;
-        if (request.getOperatorId() != null) {
-            operator = operatorRepository.findById(request.getOperatorId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Operator not found with id: " + request.getOperatorId()));
-        }
+                        "Destination place not found with id: " + req.getDestinationId()));
+        Operator operator = ownershipValidator.getOperatorFromEmail(email);
 
         Route route = Route.builder()
-                .routeCode(request.getRouteCode())
-                .routeName(request.getRouteName())
+                .routeCode(req.getRouteCode())
+                .routeName(req.getRouteName())
                 .origin(origin)
                 .destination(destination)
-                .vehicleType(VehicleType.valueOf(request.getVehicleType().toUpperCase()))
+                .vehicleType(VehicleType.valueOf(req.getVehicleType().toUpperCase()))
                 .status(RouteStatus.ACTIVE)
                 .operator(operator)
                 .build();
-
         return toResponse(routeRepository.save(route));
     }
 
-    public RouteResponse updateRoute(String id, RouteRequest request) {
+    public RouteResponse updateRoute(String id, RouteRequest req, String email) {
         Route route = routeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Route not found with id: " + id));
+        ownershipValidator.assertOwnsRoute(route, email);
 
-        Place origin = placeRepository.findById(request.getOriginId())
+        Place origin = placeRepository.findById(req.getOriginId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Origin place not found with id: " + request.getOriginId()));
-
-        Place destination = placeRepository.findById(request.getDestinationId())
+                        "Origin place not found with id: " + req.getOriginId()));
+        Place destination = placeRepository.findById(req.getDestinationId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Destination place not found with id: " + request.getDestinationId()));
+                        "Destination place not found with id: " + req.getDestinationId()));
 
-        if (request.getOperatorId() != null) {
-            Operator operator = operatorRepository.findById(request.getOperatorId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Operator not found with id: " + request.getOperatorId()));
-            route.setOperator(operator);
-        }
-
-        route.setRouteCode(request.getRouteCode());
-        route.setRouteName(request.getRouteName());
+        route.setRouteCode(req.getRouteCode());
+        route.setRouteName(req.getRouteName());
         route.setOrigin(origin);
         route.setDestination(destination);
-        route.setVehicleType(VehicleType.valueOf(request.getVehicleType().toUpperCase()));
-
+        route.setVehicleType(VehicleType.valueOf(req.getVehicleType().toUpperCase()));
         return toResponse(routeRepository.save(route));
     }
 
@@ -164,10 +148,11 @@ public class RouteService {
         return toResponse(routeRepository.save(route));
     }
 
-    public void deleteRoute(String id) {
+    public void deleteRoute(String id, String email) {
         Route route = routeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Route not found with id: " + id));
+        ownershipValidator.assertOwnsRoute(route, email);
         routeRepository.delete(route);
     }
 }
